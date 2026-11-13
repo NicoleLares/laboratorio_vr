@@ -1,0 +1,517 @@
+
+/* ========================================
+   NEXUS VR - ESTILOS PRINCIPALES
+   ======================================== */
+
+:root {
+  --bg: #080e1b;
+  --bg-soft: #101b2e;
+  --panel: #101b2c;
+  --border: rgba(147, 176, 219, 0.16);
+  --text: #f0f5ff;
+  --muted: #a1b0c9;
+  --cyan: #54dfff;
+  --violet: #a68cff;
+  --green: #62e3ad;
+  --danger: #ff8b96;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  line-height: 1.65;
+}
+
+a {
+  text-decoration: none;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--cyan);
+  outline-offset: 4px;
+}
+
+/* NAVEGACIÓN */
+
+.site-header {
+  border-bottom: 1px solid var(--border);
+  background: rgba(8, 14, 27, 0.94);
+}
+
+.nav-layout {
+  min-height: 78px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+  font-size: 1.12rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+}
+
+.brand:hover {
+  color: var(--text);
+}
+
+.brand strong {
+  color: var(--cyan);
+}
+
+.brand-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--cyan);
+  border-radius: 12px;
+  color: var(--cyan);
+  font-size: 1.5rem;
+}
+
+.nav-tag {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+/* PORTADA */
+
+.hero {
+  padding-top: 95px;
+  padding-bottom: 90px;
+}
+
+.eyebrow,
+.section-kicker,
+.panel-label {
+  color: var(--cyan);
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 22px;
+}
+
+.pulse-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 15px var(--green);
+  animation: pulse 2s infinite;
+}
+
+.hero h1 {
+  max-width: 650px;
+  font-size: clamp(2.7rem, 5vw, 4.7rem);
+  font-weight: 850;
+  line-height: 1.12;
+  letter-spacing: -0.045em;
+}
+
+.gradient-text {
+  background: linear-gradient(
+    100deg,
+    var(--cyan),
+    #80aaff,
+    var(--violet)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-description {
+  max-width: 540px;
+  margin-top: 25px;
+  font-size: 1.05rem;
+  color: var(--muted);
+}
+
+.hero-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.hero-features span {
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  background: var(--bg-soft);
+  color: #d5e3f6;
+  font-size: 0.8rem;
+}
+
+/* BOTONES */
+
+.btn-nexus {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  padding: 13px 25px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--cyan);
+  color: #07121f;
+  font-weight: 800;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.btn-nexus:hover {
+  background: #a0efff;
+  color: #07121f;
+  transform: translateY(-2px);
+}
+
+.btn-nexus:disabled {
+  background: #29384b;
+  border-color: #41516a;
+  color: #b5c2d5;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 1;
+}
+
+/* VISTA PREVIA */
+
+.preview-panel {
+  overflow: hidden;
+  border: 1px solid rgba(84, 223, 255, 0.25);
+  border-radius: 18px;
+  background: var(--panel);
+  box-shadow: 0 25px 75px rgba(0, 0, 0, 0.2);
+}
+
+.preview-header,
+.preview-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 19px;
+}
+
+.preview-header {
+  border-bottom: 1px solid var(--border);
+}
+
+.preview-header h2 {
+  margin: 5px 0 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.preview-live {
+  border: 1px solid #327e77;
+  border-radius: 7px;
+  padding: 5px 9px;
+  color: var(--green);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.scene-container {
+  width: 100%;
+  height: 360px;
+  background: #070f1d;
+}
+
+.scene-container canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.preview-footer {
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.73rem;
+}
+
+/* SECCIONES */
+
+.content-section {
+  padding-top: 40px;
+  padding-bottom: 70px;
+}
+
+.section-heading {
+  margin-bottom: 30px;
+}
+
+.section-heading h2,
+.info-panel h2 {
+  margin-top: 12px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.section-heading p {
+  max-width: 650px;
+  margin-top: 13px;
+  color: var(--muted);
+}
+
+/* TARJETAS DE PIEZAS */
+
+.piece-card {
+  min-height: 165px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 20px 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel);
+  text-align: center;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.piece-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--cyan);
+}
+
+.piece-card strong {
+  font-size: 0.96rem;
+}
+
+.piece-card small {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.piece-symbol {
+  color: #54b8ff;
+  font-size: 2.8rem;
+  line-height: 1.3;
+}
+
+.piece-symbol.sphere {
+  color: #62e3ad;
+}
+
+.piece-symbol.cone {
+  color: #ffb66c;
+}
+
+.piece-symbol.cylinder {
+  color: #b39aff;
+}
+
+.piece-symbol.prism {
+  color: #ffe18a;
+}
+
+/* INSTRUCCIONES */
+
+.info-panel {
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--panel);
+}
+
+.info-panel h2 {
+  margin-bottom: 23px;
+  font-size: 1.5rem;
+}
+
+.instruction {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  margin-top: 25px;
+}
+
+.step-number {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(84, 223, 255, 0.3);
+  border-radius: 10px;
+  background: rgba(84, 223, 255, 0.07);
+  color: var(--cyan);
+  font-weight: 800;
+}
+
+.instruction h3 {
+  margin: 0 0 5px;
+  font-size: 1.02rem;
+  font-weight: 750;
+}
+
+.instruction p,
+.muted-text,
+.vr-message,
+.stage-note {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.compatibility-status {
+  margin: 22px 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.compatibility-status.success {
+  border-color: rgba(98, 227, 173, 0.35);
+  color: var(--green);
+}
+
+.compatibility-status.error {
+  border-color: rgba(255, 139, 150, 0.35);
+  color: var(--danger);
+}
+
+.vr-message {
+  margin-top: 15px;
+}
+
+.device-tag {
+  margin-top: 25px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  color: var(--cyan);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.stage-note {
+  margin: 12px 0 0;
+}
+
+/* FOOTER */
+
+.site-footer {
+  margin-top: 40px;
+  padding: 32px 0;
+  border-top: 1px solid var(--border);
+  background: #070c16;
+}
+
+.footer-layout {
+  display: flex;
+  justify-content: space-between;
+  gap: 25px;
+}
+
+.site-footer strong {
+  color: var(--cyan);
+  letter-spacing: 0.07em;
+}
+
+.site-footer p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.83rem;
+}
+
+.footer-right {
+  display: flex;
+  flex-direction: column;
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-align: right;
+}
+
+/* ANIMACIONES */
+
+@keyframes pulse {
+  50% {
+    opacity: 0.4;
+    box-shadow: 0 0 3px var(--green);
+  }
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 991px) {
+  .hero {
+    padding-top: 60px;
+    padding-bottom: 50px;
+  }
+
+  .content-section {
+    padding-bottom: 35px;
+  }
+}
+
+@media (max-width: 575px) {
+  .nav-tag {
+    font-size: 0.65rem;
+    text-align: right;
+  }
+
+  .hero h1 {
+    font-size: 2.7rem;
+  }
+
+  .scene-container {
+    height: 270px;
+  }
+
+  .info-panel {
+    padding: 23px;
+  }
+
+  .footer-layout {
+    flex-direction: column;
+  }
+
+  .footer-right {
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

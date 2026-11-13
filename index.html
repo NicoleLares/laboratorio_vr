@@ -1,0 +1,668 @@
+
+<!DOCTYPE html>
+<html lang="es-MX">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <meta name="theme-color"
+        content="#080e1b">
+
+  <meta name="description"
+        content="NEXUS VR: Laboratorio virtual de manipulación y ensamblaje 3D para Meta Quest 3, desarrollado con Three.js y WebXR.">
+
+  <meta name="author"
+        content="NEXUS VR - Ingeniería en TIC">
+
+  <title>NEXUS VR | Laboratorio de Ensamblaje 3D</title>
+
+  <!-- ======================================
+       FAVICON
+       ====================================== -->
+
+  <link rel="icon"
+        type="image/svg+xml"
+        href="./assets/favicon.svg">
+
+  <!-- ======================================
+       BOOTSTRAP 5
+       ====================================== -->
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.9/dist/css/bootstrap.min.css"
+    rel="stylesheet">
+
+  <!-- ======================================
+       ESTILOS PERSONALIZADOS
+       ====================================== -->
+
+  <link rel="stylesheet"
+        href="./css/style.css">
+
+  <!-- ======================================
+       IMPORT MAP - THREE.JS
+       ====================================== -->
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"
+    }
+  }
+  </script>
+
+</head>
+
+<body>
+
+  <!-- ======================================
+       HEADER / NAVEGACIÓN
+       ====================================== -->
+
+  <header class="site-header">
+
+    <nav class="container nav-layout"
+         aria-label="Navegación principal">
+
+      <a class="brand" href="./index.html">
+
+        <span class="brand-icon">
+          N
+        </span>
+
+        <span>
+          NEXUS <strong>VR</strong>
+        </span>
+
+      </a>
+
+      <span class="nav-tag">
+        Práctica 3.1 · Meta Quest 3
+      </span>
+
+    </nav>
+
+  </header>
+
+
+  <main>
+
+    <!-- ======================================
+         SECCIÓN PRINCIPAL / HERO
+         ====================================== -->
+
+    <section class="hero container">
+
+      <div class="row align-items-center g-5">
+
+        <!-- INFORMACIÓN PRINCIPAL -->
+
+        <div class="col-lg-6">
+
+          <div class="eyebrow">
+
+            <span class="pulse-dot"></span>
+
+            EXPERIENCIA INMERSIVA WEBXR
+
+          </div>
+
+          <h1>
+
+            El siguiente nivel
+            del
+
+            <span class="gradient-text">
+              ensamblaje 3D.
+            </span>
+
+          </h1>
+
+          <p class="hero-description">
+
+            Explora un laboratorio virtual diseñado
+            para Meta Quest 3.
+
+            Manipula objetos tridimensionales
+            utilizando tus manos y completa
+            un desafío de precisión espacial.
+
+          </p>
+
+          <div class="hero-features">
+
+            <span>
+              Seguimiento de manos
+            </span>
+
+            <span>
+              Interacción 3D
+            </span>
+
+            <span>
+              WebXR
+            </span>
+
+          </div>
+
+          <a class="btn btn-nexus mt-4"
+             href="#laboratorio">
+
+            Explorar laboratorio
+
+            <span aria-hidden="true">
+              →
+            </span>
+
+          </a>
+
+        </div>
+
+
+        <!-- ======================================
+             VISTA PREVIA THREE.JS
+             ====================================== -->
+
+        <div class="col-lg-6">
+
+          <div class="preview-panel"
+               id="laboratorio">
+
+            <div class="preview-header">
+
+              <div>
+
+                <span class="panel-label">
+                  VISTA PREVIA 3D
+                </span>
+
+                <h2>
+                  NEXUS LAB / 01
+                </h2>
+
+              </div>
+
+              <span class="preview-live">
+                3D
+              </span>
+
+            </div>
+
+
+            <!-- ESCENA THREE.JS -->
+
+            <div
+              id="scene-container"
+              class="scene-container"
+              aria-label="Vista previa del laboratorio tridimensional">
+            </div>
+
+
+            <!-- INFORMACIÓN DE ESTADO -->
+
+            <div class="preview-footer">
+
+              <span
+                id="render-status"
+                role="status"
+                aria-live="polite">
+
+                Inicializando Three.js...
+
+              </span>
+
+              <span>
+                Three.js + WebXR
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ======================================
+         SECCIÓN DE OBJETIVOS
+         ====================================== -->
+
+    <section class="content-section container">
+
+      <div class="section-heading">
+
+        <span class="section-kicker">
+          EL DESAFÍO
+        </span>
+
+        <h2>
+          Cinco piezas. Cinco destinos.
+        </h2>
+
+        <p>
+
+          Cada objeto tridimensional tiene
+          una posición asignada.
+
+          Apunta, selecciona, arrastra
+          y suelta cada pieza en su
+          destino correspondiente.
+
+          El laboratorio comprobará si
+          el ensamblaje es correcto.
+
+        </p>
+
+      </div>
+
+
+      <!-- TARJETAS DE LAS CINCO PIEZAS -->
+
+      <div class="row g-3">
+
+        <!-- CUBO -->
+
+        <div class="col-6 col-lg">
+
+          <div class="piece-card">
+
+            <span class="piece-symbol"
+                  aria-hidden="true">
+              ■
+            </span>
+
+            <strong>
+              Cubo
+            </strong>
+
+            <small>
+              Base cuadrada
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <!-- ESFERA -->
+
+        <div class="col-6 col-lg">
+
+          <div class="piece-card">
+
+            <span class="piece-symbol sphere"
+                  aria-hidden="true">
+              ●
+            </span>
+
+            <strong>
+              Esfera
+            </strong>
+
+            <small>
+              Base circular
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <!-- CONO -->
+
+        <div class="col-6 col-lg">
+
+          <div class="piece-card">
+
+            <span class="piece-symbol cone"
+                  aria-hidden="true">
+              ▲
+            </span>
+
+            <strong>
+              Cono
+            </strong>
+
+            <small>
+              Base cónica
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <!-- CILINDRO -->
+
+        <div class="col-6 col-lg">
+
+          <div class="piece-card">
+
+            <span class="piece-symbol cylinder"
+                  aria-hidden="true">
+              ▮
+            </span>
+
+            <strong>
+              Cilindro
+            </strong>
+
+            <small>
+              Base cilíndrica
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <!-- PRISMA -->
+
+        <div class="col-6 col-lg">
+
+          <div class="piece-card">
+
+            <span class="piece-symbol prism"
+                  aria-hidden="true">
+              ◆
+            </span>
+
+            <strong>
+              Prisma
+            </strong>
+
+            <small>
+              Base triangular
+            </small>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ======================================
+         INSTRUCCIONES Y ACCESO VR
+         ====================================== -->
+
+    <section class="content-section container">
+
+      <div class="row g-4">
+
+        <!-- INSTRUCCIONES -->
+
+        <div class="col-lg-7">
+
+          <article class="info-panel h-100">
+
+            <span class="section-kicker">
+              GUÍA DE INTERACCIÓN
+            </span>
+
+            <h2>
+              Controla el entorno con tus manos
+            </h2>
+
+
+            <!-- PASO 1 -->
+
+            <div class="instruction">
+
+              <span class="step-number">
+                01
+              </span>
+
+              <div>
+
+                <h3>
+                  Apunta
+                </h3>
+
+                <p>
+                  Dirige el rayo virtual hacia
+                  la pieza tridimensional
+                  que deseas seleccionar.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <!-- PASO 2 -->
+
+            <div class="instruction">
+
+              <span class="step-number">
+                02
+              </span>
+
+              <div>
+
+                <h3>
+                  Selecciona y mueve
+                </h3>
+
+                <p>
+                  Une los dedos índice y pulgar
+                  para seleccionar una pieza.
+
+                  Mantén el gesto de pinza
+                  mientras la arrastras.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <!-- PASO 3 -->
+
+            <div class="instruction">
+
+              <span class="step-number">
+                03
+              </span>
+
+              <div>
+
+                <h3>
+                  Ensambla
+                </h3>
+
+                <p>
+                  Suelta la pieza cerca de
+                  su destino correspondiente.
+
+                  Cuando el ensamblaje sea
+                  correcto, la pieza quedará
+                  colocada automáticamente.
+                </p>
+
+              </div>
+
+            </div>
+
+          </article>
+
+        </div>
+
+
+        <!-- ======================================
+             ACCESO A REALIDAD VIRTUAL
+             ====================================== -->
+
+        <div class="col-lg-5">
+
+          <aside class="info-panel h-100">
+
+            <span class="section-kicker">
+              ACCESO INMERSIVO
+            </span>
+
+            <h2>
+              Iniciar experiencia VR
+            </h2>
+
+            <p class="muted-text">
+
+              Para utilizar el laboratorio
+              necesitas Meta Quest 3,
+              Meta Quest Browser
+              y una conexión HTTPS.
+
+            </p>
+
+
+            <!-- COMPATIBILIDAD WEBXR -->
+
+            <div
+              id="compatibility-status"
+              class="compatibility-status"
+              role="status"
+              aria-live="polite">
+
+              Comprobando compatibilidad WebXR...
+
+            </div>
+
+
+            <!-- BOTÓN DE ENTRADA VR -->
+
+            <button
+              id="enter-vr"
+              type="button"
+              class="btn btn-nexus w-100"
+              disabled>
+
+              Entrar a realidad virtual
+
+            </button>
+
+
+            <!-- MENSAJES DEL VISOR -->
+
+            <p
+              id="vr-message"
+              class="vr-message"
+              role="status"
+              aria-live="polite">
+
+              La experiencia requiere
+              un visor compatible.
+
+            </p>
+
+
+            <!-- IDENTIFICACIÓN DEL VISOR -->
+
+            <div class="device-tag">
+
+              META QUEST 3 · HAND TRACKING
+
+            </div>
+
+
+            <!-- INFORMACIÓN DE LA ETAPA -->
+
+            <p class="stage-note">
+
+              Etapa 3: laboratorio 3D con cinco
+              piezas geométricas, cinco destinos
+              y panel HUD inmersivo.
+
+              La selección, el arrastre mediante
+              gestos de pinza y las reglas
+              del ensamblaje se incorporarán
+              en las siguientes etapas.
+
+            </p>
+
+          </aside>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- ======================================
+       FOOTER
+       ====================================== -->
+
+  <footer class="site-footer">
+
+    <div class="container footer-layout">
+
+      <div>
+
+        <strong>
+          NEXUS VR
+        </strong>
+
+        <p>
+
+          Laboratorio virtual de manipulación
+          y ensamblaje 3D.
+
+        </p>
+
+      </div>
+
+
+      <div class="footer-right">
+
+        <span>
+          Ingeniería en Tecnologías de la
+          Información y Comunicaciones
+        </span>
+
+        <span>
+          Práctica 3.1 · 2026
+        </span>
+
+        <span>
+          Three.js · WebXR · Bootstrap 5
+        </span>
+
+      </div>
+
+    </div>
+
+  </footer>
+
+
+  <!-- ======================================
+       BOOTSTRAP JAVASCRIPT
+       ====================================== -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.9/dist/js/bootstrap.bundle.min.js">
+  </script>
+
+
+  <!-- ======================================
+       APLICACIÓN PRINCIPAL
+       ====================================== -->
+
+  <script
+    type="module"
+    src="./js/main.js">
+  </script>
+
+</body>
+
+</html>
