@@ -1,12 +1,15 @@
 
 import * as THREE from "three";
 
+import {
+  createGame
+} from "./game.js";
+
 // ========================================
-// NEXUS VR - SISTEMA DE INTERACCIÓN
-// ETAPA 4
+// NEXUS VR - INTERACCIÓN Y ENSAMBLAJE
+// ETAPA 5
 // ========================================
 
-// Límites basados en la mesa de la Etapa 3
 const BOUNDS = {
   minX: -0.99,
   maxX: 0.99,
@@ -19,43 +22,39 @@ const SMOOTHING = 0.35;
 
 export function createInteraction(
   laboratory,
-  hands
+  hands,
+  options = {}
 ) {
 
   const { pieces, hud } = laboratory;
 
+  const game = createGame(laboratory);
+
   const raycaster = new THREE.Raycaster();
+
   raycaster.near = 0.02;
   raycaster.far = 4;
 
-  const tempPoint = new THREE.Vector3();
+  const point = new THREE.Vector3();
 
   const plane = new THREE.Plane(
     new THREE.Vector3(0, 1, 0),
     0
   );
 
-  // Una selección activa por mano
   const grabs = new Map();
-
-  // Evita seleccionar una pieza con dos manos
   const claimed = new Set();
 
-  let lastHUD = "";
-
-  let feedback = "";
-  let feedbackUntil = 0;
-
   const selectable = pieces.map(
-    (piece) => piece.mesh
+    piece => piece.mesh
   );
 
-  function report(message, duration = 1200) {
-    feedback = message;
-    feedbackUntil = performance.now() + duration;
-  }
+  let exitRequested = false;
 
-  // Crear rayo desde la mano
+  // ======================================
+  // RAYO DE APUNTADO
+  // ======================================
+
   function updateRay(slot) {
 
     slot.controller.updateMatrixWorld(true);
@@ -71,7 +70,10 @@ export function createInteraction(
       );
   }
 
-  // Buscar piezas alcanzadas por el rayo
+  // ======================================
+  // INTERSECCIONES
+  // ======================================
+
   function findPiece() {
 
     const hits = raycaster.intersectObjects(
@@ -82,21 +84,34 @@ export function createInteraction(
     for (const hit of hits) {
 
       const piece = pieces.find(
-        (item) => item.mesh === hit.object
+        item => item.mesh === hit.object
       );
 
       if (
         piece &&
-        piece.state !== "placed"
+        piece.state !== "placed" &&
+        !claimed.has(piece.id)
       ) {
-        return { hit, piece };
+        return {
+          hit,
+          piece
+        };
       }
     }
 
     return null;
   }
 
-  // Intersección con un plano horizontal
+  function findButton() {
+
+    const hits = raycaster.intersectObjects(
+      hud.buttons,
+      false
+    );
+
+    return hits.length ? hits[0] : null;
+  }
+
   function getTablePoint(height) {
 
     if (
@@ -110,14 +125,14 @@ export function createInteraction(
       -height
     );
 
-    const point = raycaster.ray.intersectPlane(
+    const hit = raycaster.ray.intersectPlane(
       plane,
-      tempPoint
+      point
     );
 
-    if (!point) return null;
+    if (!hit) return null;
 
-    const distance = point.distanceTo(
+    const distance = hit.distanceTo(
       raycaster.ray.origin
     );
 
@@ -128,28 +143,23 @@ export function createInteraction(
       return null;
     }
 
-    return point.clone();
+    return hit.clone();
   }
 
-  function clamp(value, min, max) {
-    return THREE.MathUtils.clamp(
-      value, min, max
-    );
-  }
+  // ======================================
+  // EVITAR COLISIONES ENTRE PIEZAS
+  // ======================================
 
-  // Evitar que dos piezas se atraviesen
-  function isPositionFree(x, z, movingPiece) {
+  function isPositionFree(x, z, moving) {
 
     for (const other of pieces) {
 
-      if (other === movingPiece) {
-        continue;
-      }
+      if (other === moving) continue;
 
-      const dx = x - other.mesh.position.x;
-      const dz = z - other.mesh.position.z;
-
-      const distance = Math.hypot(dx, dz);
+      const distance = Math.hypot(
+        x - other.mesh.position.x,
+        z - other.mesh.position.z
+      );
 
       if (distance < MIN_DISTANCE) {
         return false;
@@ -160,33 +170,27 @@ export function createInteraction(
   }
 
   // ======================================
-  // SELECCIÓN
+  // AGARRAR UNA PIEZA
   // ======================================
 
-  function beginGrab(slot, result) {
-
-    const { piece } = result;
+  function beginGrab(slot, piece) {
 
     if (
       claimed.has(piece.id) ||
       piece.state === "placed"
-    ) {
-      return;
-    }
+    ) return;
 
-    const point = getTablePoint(
+    const tablePoint = getTablePoint(
       piece.mesh.position.y
     );
 
-    if (!point) {
-      report("INCLINA EL RAYO HACIA LA MESA");
-      return;
-    }
+    if (!tablePoint) return;
 
-    // Mantener offset para evitar saltos
+    game.clearError(piece);
+
     const offset = piece.mesh.position
       .clone()
-      .sub(point);
+      .sub(tablePoint);
 
     grabs.set(slot.index, {
       piece,
@@ -194,16 +198,14 @@ export function createInteraction(
     });
 
     claimed.add(piece.id);
-
     piece.state = "selected";
 
-    report(
-      `SELECCIONADO: ${piece.name}`
-    );
+    // El reto inicia con la primera selección
+    game.start();
   }
 
   // ======================================
-  // MOVIMIENTO
+  // ARRASTRAR UNA PIEZA
   // ======================================
 
   function moveGrab(slot) {
@@ -213,28 +215,26 @@ export function createInteraction(
     if (!grab) return;
 
     const { piece, offset } = grab;
-
     const mesh = piece.mesh;
 
-    const point = getTablePoint(
+    const tablePoint = getTablePoint(
       mesh.position.y
     );
 
-    if (!point) return;
+    if (!tablePoint) return;
 
-    const targetX = clamp(
-      point.x + offset.x,
+    const targetX = THREE.MathUtils.clamp(
+      tablePoint.x + offset.x,
       BOUNDS.minX,
       BOUNDS.maxX
     );
 
-    const targetZ = clamp(
-      point.z + offset.z,
+    const targetZ = THREE.MathUtils.clamp(
+      tablePoint.z + offset.z,
       BOUNDS.minZ,
       BOUNDS.maxZ
     );
 
-    // Movimiento suavizado
     const nextX = THREE.MathUtils.lerp(
       mesh.position.x,
       targetX,
@@ -247,7 +247,13 @@ export function createInteraction(
       SMOOTHING
     );
 
-    if (isPositionFree(nextX, nextZ, piece)) {
+    if (
+      isPositionFree(
+        nextX,
+        nextZ,
+        piece
+      )
+    ) {
 
       mesh.position.x = nextX;
       mesh.position.z = nextZ;
@@ -273,16 +279,15 @@ export function createInteraction(
       mesh.position.z = nextZ;
     }
 
-    // La altura no se modifica:
-    // la pieza permanece sobre la mesa.
+    // La altura se conserva
     piece.state = "moving";
   }
 
   // ======================================
-  // LIBERACIÓN
+  // LIBERAR Y VALIDAR
   // ======================================
 
-  function endGrab(slot, lostTracking = false) {
+  function endGrab(slot, validate = true) {
 
     const grab = grabs.get(slot.index);
 
@@ -290,207 +295,270 @@ export function createInteraction(
 
     const piece = grab.piece;
 
+    grabs.delete(slot.index);
+    claimed.delete(piece.id);
+
     if (piece.state !== "placed") {
       piece.state = "available";
     }
 
-    claimed.delete(piece.id);
-    grabs.delete(slot.index);
+    // Solo validar con liberación normal
+    if (validate) {
 
-    if (lostTracking) {
-
-      report(
-        "SEGUIMIENTO PERDIDO: PIEZA LIBERADA"
-      );
+      game.release(piece);
 
     } else {
 
-      report(
-        `SOLTASTE: ${piece.name}`
+      game.notify(
+        "PIEZA LIBERADA SIN VALIDAR",
+        "ACTIVO",
+        1000
       );
     }
   }
 
+  function cancelAllGrabs() {
+
+    for (const slot of hands.slots) {
+
+      if (grabs.has(slot.index)) {
+        endGrab(slot, false);
+      }
+    }
+
+    grabs.clear();
+    claimed.clear();
+  }
+
   // ======================================
-  // RESALTADO DE OBJETOS
+  // RESALTADO
   // ======================================
 
   function updateHighlights(hovered) {
 
     for (const piece of pieces) {
 
-      const material = piece.mesh.material;
+      if (
+        piece.state === "placed" ||
+        game.isInError(piece)
+      ) {
+        continue;
+      }
 
       const grabbed = claimed.has(piece.id);
 
       if (grabbed) {
 
-        material.emissiveIntensity = 0.55;
+        piece.mesh.material.emissiveIntensity =
+          0.55;
 
       } else if (hovered.has(piece.id)) {
 
-        material.emissiveIntensity = 0.32;
+        piece.mesh.material.emissiveIntensity =
+          0.32;
 
       } else {
 
-        material.emissiveIntensity = 0.08;
+        piece.mesh.material.emissiveIntensity =
+          0.08;
       }
     }
   }
 
   // ======================================
-  // PANEL DE ESTADO VR
+  // BOTONES DEL HUD
   // ======================================
 
-  function updateHUD() {
+  function activateButton(button) {
 
-    const tracked = hands.slots.filter(
-      (slot) => slot.tracking
-    ).length;
+    const action = button.userData.action;
 
-    let status = "ACTIVO";
-    let message = "";
+    if (action === "reset") {
 
-    if (tracked === 0) {
+      cancelAllGrabs();
+      game.reset();
 
-      status = "SIN MANOS";
-      message = "ACERCA TUS MANOS AL VISOR";
-
-    } else if (grabs.size > 0) {
-
-      status = "MOVIENDO";
-      message = "SUELTA LA PINZA PARA LIBERAR";
-
-    } else {
-
-      status = "ACTIVO";
-      message =
-        `MANOS: ${tracked}/2 - APUNTA Y HAZ PINZA`;
+      console.log(
+        "Botón VR: Reiniciar"
+      );
     }
 
-    if (performance.now() < feedbackUntil) {
-      message = feedback;
-    }
+    if (action === "exit" && !exitRequested) {
 
-    const key = `${status}|${message}`;
+      exitRequested = true;
 
-    if (key !== lastHUD) {
+      cancelAllGrabs();
 
-      hud.update({
-        completed: 0,
-        elapsedSeconds: 0,
-        status,
-        message
-      });
+      if (typeof options.onExitVR === "function") {
 
-      lastHUD = key;
+        Promise.resolve()
+          .then(() => options.onExitVR())
+          .catch(error => {
+
+            exitRequested = false;
+
+            console.error(
+              "Error al salir de VR:",
+              error
+            );
+
+            game.notify(
+              "NO SE PUDO CERRAR VR",
+              "ERROR"
+            );
+          });
+      }
     }
   }
 
   // ======================================
-  // ACTUALIZACIÓN POR FRAME
+  // ACTUALIZACIÓN EN VR
   // ======================================
 
   function update() {
 
     hands.update();
 
-    const hovered = new Set();
+    const hoveredPieces = new Set();
+
+    let hoveredButton = null;
 
     for (const slot of hands.slots) {
 
-      // Si se pierde una mano,
-      // liberar cualquier pieza agarrada
       if (!slot.tracking) {
 
-        endGrab(slot, true);
+        // La pérdida de tracking no cuenta
+        // como un intento de colocación
+        if (grabs.has(slot.index)) {
+          endGrab(slot, false);
+        }
+
         continue;
       }
 
       updateRay(slot);
 
-      // Liberar al terminar la pinza
+      // Liberar antes de nuevas selecciones
       if (slot.justReleased) {
-        endGrab(slot);
+        endGrab(slot, true);
       }
 
-      // Seleccionar al iniciar la pinza
-      if (
-        slot.justPressed &&
-        !grabs.has(slot.index)
-      ) {
-
-        const result = findPiece();
-
-        if (result) {
-          beginGrab(slot, result);
-        }
-      }
-
+      // Si ya está agarrando una pieza,
+      // continuar el movimiento
       if (grabs.has(slot.index)) {
 
         moveGrab(slot);
-
         slot.setRayDistance(1.5);
+
+        continue;
+      }
+
+      // Detectar pieza y botón
+      const pieceResult = findPiece();
+      const buttonHit = findButton();
+
+      // El objeto más cercano tiene prioridad
+      const useButton = Boolean(
+        buttonHit &&
+        (
+          !pieceResult ||
+          buttonHit.distance <=
+            pieceResult.hit.distance
+        )
+      );
+
+      if (useButton) {
+
+        hoveredButton = buttonHit.object;
+
+        slot.setRayDistance(
+          buttonHit.distance
+        );
+
+        if (slot.justPressed) {
+
+          activateButton(
+            buttonHit.object
+          );
+
+          if (exitRequested) break;
+        }
+
+        continue;
+      }
+
+      if (pieceResult) {
+
+        slot.setRayDistance(
+          pieceResult.hit.distance
+        );
+
+        hoveredPieces.add(
+          pieceResult.piece.id
+        );
+
+        if (
+          slot.justPressed &&
+          game.getPhase() !== "completed"
+        ) {
+
+          beginGrab(
+            slot,
+            pieceResult.piece
+          );
+        }
 
       } else {
 
-        const result = findPiece();
-
-        if (result) {
-
-          slot.setRayDistance(
-            result.hit.distance
-          );
-
-          if (!claimed.has(result.piece.id)) {
-
-            hovered.add(
-              result.piece.id
-            );
-          }
-
-        } else {
-
-          slot.setRayDistance(2.5);
-        }
+        slot.setRayDistance(2.5);
       }
     }
 
-    updateHighlights(hovered);
-    updateHUD();
+    hud.setHoveredButton(
+      hoveredButton
+    );
+
+    updateHighlights(hoveredPieces);
+
+    const tracked = hands.slots.filter(
+      slot => slot.tracking
+    ).length;
+
+    game.update({
+      tracked,
+      dragging: grabs.size > 0
+    });
   }
 
   // ======================================
-  // CIERRE SEGURO DE VR
+  // SALIR Y VOLVER A ENTRAR A VR
   // ======================================
 
   function stop() {
 
-    for (const slot of hands.slots) {
-      endGrab(slot, true);
-    }
-
-    claimed.clear();
-    grabs.clear();
+    cancelAllGrabs();
 
     hands.resetAll();
 
+    hud.setHoveredButton(null);
+
     updateHighlights(new Set());
 
-    lastHUD = "";
-    feedbackUntil = 0;
+    game.pause();
 
-    hud.update({
-      completed: 0,
-      elapsedSeconds: 0,
-      status: "PREPARADO",
-      message: "LABORATORIO LISTO"
-    });
+    game.update();
+  }
+
+  function resume() {
+
+    exitRequested = false;
+    game.resume();
   }
 
   return {
     update,
-    stop
+    stop,
+    resume,
+    unlockAudio: game.unlockAudio
   };
 }

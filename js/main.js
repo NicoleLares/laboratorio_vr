@@ -22,7 +22,7 @@ import {
 
 // ========================================
 // NEXUS VR - APLICACIÓN PRINCIPAL
-// ETAPA 4
+// ETAPA 5
 // ========================================
 
 const container = document.getElementById(
@@ -36,7 +36,7 @@ async function initializeApplication() {
   let renderer;
 
   // ======================================
-  // RENDERIZADOR THREE.JS
+  // INICIALIZAR THREE.JS
   // ======================================
 
   try {
@@ -73,16 +73,16 @@ async function initializeApplication() {
   } catch (error) {
 
     console.error(
-      "Error al inicializar WebGL:",
+      "Error al iniciar Three.js:",
       error
     );
 
     setRenderStatus(
-      "No se pudo iniciar el entorno 3D."
+      "No se pudo iniciar Three.js."
     );
 
     setCompatibility(
-      "WebGL no está disponible.",
+      "WebGL no disponible.",
       false
     );
 
@@ -90,7 +90,7 @@ async function initializeApplication() {
   }
 
   // ======================================
-  // LABORATORIO
+  // CREAR LABORATORIO
   // ======================================
 
   const laboratory = createLaboratoryScene();
@@ -101,32 +101,43 @@ async function initializeApplication() {
     update
   } = laboratory;
 
-  // Crear manos una sola vez
+  // Modelos y seguimiento de las manos
   const hands = createHands(
     renderer,
     scene
   );
 
-  // Conectar sistema de interacción
+  // Cierre seguro desde el panel 3D
+  async function exitVR() {
+
+    const session = renderer.xr.getSession();
+
+    if (session) {
+      await session.end();
+    }
+  }
+
+  // Interacciones y lógica del juego
   const interaction = createInteraction(
     laboratory,
-    hands
+    hands,
+    {
+      onExitVR: exitVR
+    }
   );
 
   // ======================================
-  // VISTA RESPONSIVA
+  // AJUSTAR EL RENDERIZADOR
   // ======================================
 
   function resizeScene() {
 
     const width = Math.max(
-      1,
-      container.clientWidth
+      container.clientWidth, 1
     );
 
     const height = Math.max(
-      1,
-      container.clientHeight
+      container.clientHeight, 1
     );
 
     renderer.setSize(
@@ -158,7 +169,7 @@ async function initializeApplication() {
   }
 
   // ======================================
-  // ANIMACIÓN THREE.JS Y WEBXR
+  // ANIMACIÓN WEBXR
   // ======================================
 
   renderer.setAnimationLoop((time) => {
@@ -167,26 +178,29 @@ async function initializeApplication() {
 
     update(seconds);
 
-    // Interacción únicamente en VR
     if (renderer.xr.isPresenting) {
+
       interaction.update();
     }
 
-    renderer.render(scene, camera);
+    renderer.render(
+      scene,
+      camera
+    );
   });
 
   setRenderStatus(
-    "Laboratorio 3D inicializado."
+    "NEXUS VR - Laboratorio cargado."
   );
 
   // ======================================
-  // COMPROBAR COMPATIBILIDAD
+  // DETECCIÓN DE WEBXR
   // ======================================
 
   if (!window.isSecureContext) {
 
     setCompatibility(
-      "Se necesita HTTPS o localhost para WebXR.",
+      "Se requiere HTTPS o localhost.",
       false
     );
 
@@ -196,12 +210,12 @@ async function initializeApplication() {
   if (!navigator.xr) {
 
     setCompatibility(
-      "WebXR no está disponible en este navegador.",
+      "WebXR no disponible en este navegador.",
       false
     );
 
     setVRMessage(
-      "Utiliza Meta Quest Browser para entrar a VR."
+      "Utiliza Meta Quest Browser para VR."
     );
 
     return;
@@ -219,7 +233,7 @@ async function initializeApplication() {
   } catch (error) {
 
     console.error(
-      "Error al comprobar WebXR:",
+      "Error de compatibilidad WebXR:",
       error
     );
   }
@@ -227,39 +241,42 @@ async function initializeApplication() {
   if (!supported) {
 
     setCompatibility(
-      "Este navegador no admite sesiones immersive-vr.",
+      "Este navegador no admite immersive-vr.",
       false
     );
 
     setVRMessage(
-      "La vista 3D está disponible. " +
-      "Para VR utiliza Meta Quest 3."
+      "La vista 3D funciona en computadora. " +
+      "La experiencia inmersiva requiere Meta Quest 3."
     );
 
     return;
   }
 
   setCompatibility(
-    "El navegador admite sesiones VR inmersivas.",
+    "WebXR immersive-vr compatible.",
     true
   );
 
   setVRMessage(
-    "Se solicitará acceso al seguimiento de manos."
+    "Laboratorio preparado para seguimiento de manos."
   );
 
   // ======================================
-  // EVENTOS DE SESIÓN
+  // INICIO DE SESIÓN XR
   // ======================================
 
   renderer.xr.addEventListener(
     "sessionstart",
     () => {
 
-      vrButton.textContent = "Salir de VR";
+      interaction.resume();
+
+      vrButton.textContent =
+        "Salir de VR";
 
       setVRMessage(
-        "VR activa. Apunta y haz pinza para mover piezas."
+        "Sesión VR activa. Ensambla las cinco piezas."
       );
 
       console.log(
@@ -267,6 +284,10 @@ async function initializeApplication() {
       );
     }
   );
+
+  // ======================================
+  // FINALIZACIÓN DE SESIÓN XR
+  // ======================================
 
   renderer.xr.addEventListener(
     "sessionend",
@@ -280,8 +301,7 @@ async function initializeApplication() {
       vrButton.disabled = false;
 
       setVRMessage(
-        "Sesión VR finalizada. " +
-        "Puedes volver a entrar."
+        "Sesión terminada. El progreso se conserva."
       );
 
       console.log(
@@ -291,7 +311,7 @@ async function initializeApplication() {
   );
 
   // ======================================
-  // ENTRAR / SALIR DE VR
+  // BOTÓN HTML PARA ENTRAR A VR
   // ======================================
 
   vrButton.addEventListener(
@@ -304,18 +324,16 @@ async function initializeApplication() {
 
         if (renderer.xr.isPresenting) {
 
-          const currentSession =
-            renderer.xr.getSession();
-
-          if (currentSession) {
-            await currentSession.end();
-          }
-
+          await exitVR();
           return;
         }
 
-        // Solicitar una sesión exclusivamente VR
-        // con seguimiento obligatorio de manos
+        // Solicitud de audio desde el clic
+        // del usuario en la portada
+        interaction.unlockAudio();
+
+        // Solicitar realidad virtual,
+        // no realidad aumentada.
         const session =
           await navigator.xr.requestSession(
             "immersive-vr",
@@ -335,7 +353,6 @@ async function initializeApplication() {
 
         } catch (error) {
 
-          // Cerrar sesión si Three.js falla
           try {
             await session.end();
           } catch (endError) {
@@ -348,12 +365,12 @@ async function initializeApplication() {
       } catch (error) {
 
         console.error(
-          "No fue posible iniciar o cerrar VR:",
+          "Error al iniciar o cerrar VR:",
           error
         );
 
         setVRMessage(
-          "No se pudo iniciar VR con manos: " +
+          "No se pudo iniciar VR: " +
           error.message
         );
 
@@ -366,17 +383,17 @@ async function initializeApplication() {
 }
 
 // ========================================
-// INICIAR APLICACIÓN
+// INICIAR NEXUS VR
 // ========================================
 
 initializeApplication().catch((error) => {
 
   console.error(
-    "Error general de NEXUS VR:",
+    "Error general:",
     error
   );
 
   setRenderStatus(
-    "Error al cargar la aplicación."
+    "Error al cargar el laboratorio."
   );
 });
